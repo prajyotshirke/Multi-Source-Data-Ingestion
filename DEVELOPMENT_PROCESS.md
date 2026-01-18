@@ -12,7 +12,7 @@
 - Write tests
 - Code must be reusable
 
-### \*\*Key Questions I Asked Myself
+### Key Questions I Asked Myself:
 
 **Rationale for Three Data Sources:**
 
@@ -118,6 +118,7 @@ multi-source-ingestion/
 **Base Class Design**
 
 My prompt:"Develop a foundational Python class for components that retrieve data.
+
 **This class must:**
 - Define an abstract fetch() method.
 - Incorporate a mechanism for retries with exponential backoff, specifically limited to network-related failures.
@@ -350,24 +351,17 @@ def normalize(data: dict) -> Article:
 
 ### The Strategy
 
-| Error | Cause | Strategy | Why |
-|-------|-------|----------|-----|
+| Error                 | Cause              | Strategy                           | Why                                  |
+|-----------------------|--------------------|------------------------------------|--------------------------------------|
+| Timeout               | Network blip       | Retry 3x with exponential backoff  | Usually temporary, retry works       |
+| 401 Unauthorized      | Bad API key        | Fail immediately, log              | Config issue, won't fix with retries |
+| 429 Too Many Requests | Rate limit         | Retry after delay                  | Temporary, might be freed up later   |
+| Connection refused    | Network down       | Retry                              | Transient                            |
+| Malformed JSON        | Bad API data       | Skip article, continue             | Don't crash whole pipeline           |
+| File not found        | Missing CSV        | Return empty list                  | Graceful degradation                 |
+| Bad encoding          | Old system data    | Try multiple encodings             | Common in enterprises                |
+| HTML parse error      | Structure changed  | Skip + log                         | Scraping is fragile                  |
 
-| Timeout | Network blip | Retry 3x with exponential backoff | Usually temporary, retry works |
-
-| 401 Unauthorized | Bad API key | Fail immediately, log | Config issue, won't fix with retries |
-
-| 429 Too Many Requests | Rate limit | Retry after delay | Temporary, might be freed up later |
-
-| Connection refused | Network down | Retry | Transient |
-
-| Malformed JSON | Bad API data | Skip article, continue | Don't crash whole pipeline |
-
-| File not found | Missing CSV | Return empty list | Graceful degradation |
-
-| Bad encoding | Old system data | Try multiple encodings | Common in enterprises |
-
-| HTML parse error | Structure changed | Skip + log | Scraping is fragile |
 
 ### Why NOT Other Strategies
 
@@ -592,4 +586,5 @@ Future-Proofing: The architecture is designed for unlimited scalability and is i
 
 
 ```
+
 
